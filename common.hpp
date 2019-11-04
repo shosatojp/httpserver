@@ -1,6 +1,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/fcntl.h>
@@ -14,6 +15,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 
 class HttpMessage {
@@ -22,57 +24,74 @@ class HttpMessage {
     void add_header(const std::string&& key, const std::string&& value);
     void add_header(const std::string&& key, const int value);
 
-    inline void add_body(char* buf, size_t size) {
-        body.sputn(buf, size);
-        body_size += size;
-    }
-    inline void add_body(char c) {
-        body.sputc(c);
-        body_size++;
-    }
-    inline void add_body(const std::string&& str) {
-        body.sputn(str.c_str(), str.length());
-        body_size += str.length();
-    }
-    void set_version(std::string& version) {
-        this->version = version;
-    }
+    inline void add_body(char* buf, size_t size);
+    inline void add_body(char c);
+    inline void add_body(const std::string&& str);
+    void set_version(std::string& version);
 
    protected:
     std::map<std::string, std::string> headers;
     std::string version = "HTTP/1.1";
-    std::stringbuf body;
+    std::vector<char> body;
     int header_count = -1;
     size_t body_size = 0;
 };
 
+void HttpMessage::add_body(char* buf, size_t size) {
+    body.insert(body.end(), buf, buf + size);
+    body_size += size;
+}
+void HttpMessage::add_body(char c) {
+    body.push_back(c);
+    body_size++;
+}
+void HttpMessage::add_body(const std::string&& str) {
+    body.insert(body.end(), str.begin(), str.end());
+    body_size += str.length();
+}
+
 class HttpRequest : public HttpMessage {
    public:
-    using HttpMessage::HttpMessage;
+    HttpRequest(const struct sockaddr_in&& client);
     std::string text();
     std::string json();
     std::string to_string();
     using HttpMessage::add_header;
     long add_header(const std::string&& line);
+    inline std::string get_method();
+    inline std::string get_path();
+    inline std::string get_addr();
+    bool keep_alive();
 
    private:
+    sockaddr_in addr;
     std::string path;
     std::string method;
 };
+std::string HttpRequest::get_method() {
+    return method;
+}
+std::string HttpRequest::get_path() {
+    return path;
+}
+std::string HttpRequest::get_addr() {
+    return std::string(inet_ntoa(addr.sin_addr));
+}
 
 class HttpResponse : public HttpMessage {
    public:
-    HttpResponse(int sockfd);
-    void response();
-    void status(int status_code, const std::string& status_message="");
+    HttpResponse(int sockfd, bool keep_alive = false);
+    void respond();
+    void status(int status_code, const std::string& status_message = "");
 
    private:
     int sockfd{};
+    bool keep_alive;
     int status_code = 200;
     std::string status_message = "OK";
 };
 
-enum class HTTPRead {
+enum class HttpRead {
     Header,
     Body
 };
@@ -83,8 +102,8 @@ class Server {
     Server& operator=(Server&&) = default;
     ~Server();
 
-    void listen(std::function<void(HttpRequest&&, HttpResponse&&)>);
-    void handle(int sockfd, std::function<void(HttpRequest&&, HttpResponse&&)> handler);
+    void listen(const std::function<void(HttpRequest&&, HttpResponse&&)>&);
+    void handle(const int sockfd, const struct sockaddr_in&& client, const std::function<void(HttpRequest&&, HttpResponse&&)>& handler);
 
    private:
     Server() = delete;

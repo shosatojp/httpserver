@@ -1,9 +1,23 @@
 #include "common.hpp"
 
-inline void HttpMessage::add_header(const std::string&& key, const std::string&& value) {
+/**
+ * HttpMessage
+*/
+void HttpMessage::add_header(const std::string&& key, const std::string&& value) {
     headers.insert(std::make_pair(key, value));
     header_count++;
 }
+void HttpMessage::add_header(const std::string&& key, const int value) {
+    add_header(std::move(key), std::to_string(value));
+}
+void HttpMessage::set_version(std::string& version) {
+    this->version = version;
+}
+
+/**
+ * HttpRequest
+ */
+HttpRequest::HttpRequest(const struct sockaddr_in&& client) : addr(client) {}
 
 long HttpRequest::add_header(const std::string&& line) {
     size_t content_length = -1;
@@ -32,12 +46,8 @@ long HttpRequest::add_header(const std::string&& line) {
     return content_length;
 }
 
-void HttpMessage::add_header(const std::string&& key, const int value) {
-    add_header(std::move(key), std::to_string(value));
-}
-
 std::string HttpRequest::text() {
-    return body.str();
+    return std::string(body.data());
 }
 
 std::string HttpRequest::to_string() {
@@ -50,28 +60,38 @@ std::string HttpRequest::to_string() {
     return ss.str();
 }
 
-void HttpResponse::response() {
-    add_header("Content-Length", body_size);
-    std::stringstream ss;
-    ss << version << " " << status_code << " " << status_message << "\r\n";
-    for (auto&& [key, value] : headers) {
-        ss << key << ": " << value << "\r\n";
-    }
-    ss << "\r\n";
-    ss << body.str().c_str();
+bool HttpRequest::keep_alive() {
+    std::string key{"CONNECTION"};
+    std::string& value = headers[key];
+    std::transform(value.cbegin(), value.cend(), value.begin(), toupper);
+    return headers.count(key) && headers[key] == "KEEP-ALIVE";
+}
 
-    std::string msg = ss.str();
-    int s;
-    if ((s = ::write(this->sockfd, msg.c_str(), msg.length())) != msg.length()) {
+/**
+ * HttpResponse
+ */
+void HttpResponse::respond() {
+    add_header("Content-Length", this->body_size);
+    std::stringstream ss;
+    ss << this->version << " " << this->status_code << " " << this->status_message << "\r\n";
+    for (auto&& [key, value] : this->headers)
+        ss << key << ": " << value << "\r\n";
+    ss << "\r\n";
+    std::string&& header = ss.str();
+
+    std::vector<char> b;
+    b.insert(b.end(), header.begin(), header.end());
+    b.insert(b.end(), this->body.begin(), this->body.end());
+
+    if (::write(this->sockfd, b.data(), b.size()) != b.size()) {
         ::perror("write");
         throw std::runtime_error("error at writing socket.");
     }
-    std::cout << s << std::endl;
-    ::close(this->sockfd);
+    if (!keep_alive) ::close(this->sockfd);
     return;
 }
 
-HttpResponse::HttpResponse(int sockfd) : sockfd(sockfd) {
+HttpResponse::HttpResponse(int sockfd, bool keep_alive) : sockfd(sockfd), keep_alive(keep_alive) {
 }
 
 void HttpResponse::status(int status_code, const std::string& status_message) {
