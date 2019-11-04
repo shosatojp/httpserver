@@ -26,7 +26,6 @@ long HttpRequest::add_header(const std::string&& line) {
         std::istringstream iss{line};
         iss >> method >> path >> version;
         std::transform(method.cbegin(), method.cend(), method.begin(), toupper);
-        // std::cout << method << "    " << version << "   " << path << std::endl;
         header_count = 0;
     } else {
         // real header
@@ -97,4 +96,23 @@ HttpResponse::HttpResponse(int sockfd, bool keep_alive) : sockfd(sockfd), keep_a
 void HttpResponse::status(int status_code, const std::string& status_message) {
     this->status_code = status_code;
     this->status_message = status_message;
+}
+
+bool starts_with(const std::string& s, const std::string& prefix) {
+    return s.size() >= prefix.size() && std::equal(prefix.begin(), prefix.end(), s.begin());
+}
+
+const std::string HttpResponse::root = std::filesystem::absolute(".");
+
+bool HttpResponse::file(const std::string& path) {
+    std::string absolute_path = std::filesystem::absolute(path).lexically_normal();
+    if (starts_with(absolute_path, root) && std::filesystem::exists(absolute_path)) {
+        std::ifstream ifs{absolute_path};
+        std::copy(std::istream_iterator<char>(ifs),
+                  std::istream_iterator<char>(),
+                  std::back_inserter(body));
+        return true;
+    } else {
+        return false;
+    }
 }

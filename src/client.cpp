@@ -31,7 +31,7 @@ const char* Client::send(const char* src, size_t size) {
         constexpr size_t buf_size = 1024;
         char buf[buf_size] = {};
         std::cout << "before" << std::endl;
-        size_t read_size = ::read(sockfd, buf, buf_size);  //::recv(sockfd, buf, buf_size, 0);
+        size_t read_size = ::read(sockfd, buf, buf_size);
         std::cout << "after" << std::endl;
 
         std::cout << read_size << std::endl;

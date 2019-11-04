@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <boost/algorithm/string.hpp>
+#include <filesystem>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -17,6 +18,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <fstream>
 
 class HttpMessage {
    public:
@@ -83,8 +85,14 @@ class HttpResponse : public HttpMessage {
     HttpResponse(int sockfd, bool keep_alive = false);
     void respond();
     void status(int status_code, const std::string& status_message = "");
+    void operator()(int status_code = 200) {
+        status(status_code);
+        respond();
+    }
+    void file(const std::string& path);
 
    private:
+    static const std::string root;
     int sockfd{};
     bool keep_alive;
     int status_code = 200;
