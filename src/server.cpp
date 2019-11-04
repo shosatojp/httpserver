@@ -90,9 +90,6 @@ void Server::handle(const int sockfd, const struct sockaddr_in&& client, const H
                     req.add_body(buf, sizeof buf);
                     break;
             }
-            // std::cout << "read_size " << read_size << std::endl;
-            // std::cout << "body_begin " << body_begin << std::endl;
-            // std::cout << "content_length " << content_length << std::endl;
             if (read_size == body_begin + 1 + content_length) {
                 break;
             }

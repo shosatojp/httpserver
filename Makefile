@@ -1,15 +1,17 @@
+CXX=g++
 CXX_OPTIONS=-g -pthread -I ~/local/include -L ~/local/lib -std=c++1z
+SERVER_FILE=httpmessage.o mimetypes.o server.o route.o main.o
+SERVER_PATH=$(addprefix src/,$(SERVER_FILE))
+TARGET=main.out
+
 %.o:%.cpp
-	g++ $(CXX_OPTIONS) $< -o $@
+	$(CXX) -c $(CXX_OPTIONS) $< -o $@
 
-main.out: src/httpmessage.cpp src/mimetypes.cpp src/server.cpp src/route.cpp src/main.cpp
-	g++ $(CXX_OPTIONS) $^ -o $@
+$(TARGET): $(SERVER_PATH)
+	$(CXX) $(CXX_OPTIONS) $^ -o $@
 
-# client.out: client.cpp
-# 	g++ $(CXX_OPTIONS) $^ -o $@
-
-run: main.out
-	./main.out
+run: $(TARGET)
+	./$<
 
 clean:
 	-rm *.out *.o

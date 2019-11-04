@@ -8,7 +8,7 @@ void HttpMessage::add_header(const std::string&& key, const std::string&& value)
     header_count++;
 }
 void HttpMessage::add_header(const std::string&& key, const int value) {
-    add_header(std::move(key), std::to_string(value));
+    add_header(std::move(key), std::move(std::to_string(value)));
 }
 void HttpMessage::set_version(std::string& version) {
     this->version = version;
@@ -78,7 +78,7 @@ void HttpResponse::respond() {
     ss << "\r\n";
     std::string&& header = ss.str();
 
-    std::vector<char> b;
+    std::vector<char> b{};
     b.insert(b.end(), header.begin(), header.end());
     b.insert(b.end(), this->body.begin(), this->body.end());
 
@@ -110,10 +110,11 @@ bool HttpResponse::file(const std::string& raw_path) {
         if (path.length() > 0) {
             std::string absolute_path = std::filesystem::absolute(path).lexically_normal();
             if (starts_with(absolute_path, root) && std::filesystem::exists(absolute_path)) {
-                std::ifstream ifs{absolute_path};
-                auto c = std::copy(std::istream_iterator<char>(ifs),
-                                   std::istream_iterator<char>(),
-                                   std::back_inserter(body));
+                std::ifstream ifs{absolute_path, std::ios::binary | std::ios::in};
+                ifs >> std::noskipws;
+                std::copy(std::istream_iterator<char>(ifs),
+                          std::istream_iterator<char>(),
+                          std::back_inserter(body));
                 return true;
             }
         }
