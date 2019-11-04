@@ -2,7 +2,7 @@ CXX_OPTIONS=-g -pthread -I ~/local/include -L ~/local/lib -std=c++1z
 %.o:%.cpp
 	g++ $(CXX_OPTIONS) $< -o $@
 
-main.out: src/httpmessage.cpp src/server.cpp src/main.cpp
+main.out: src/httpmessage.cpp src/mimetypes.cpp src/server.cpp src/route.cpp src/main.cpp
 	g++ $(CXX_OPTIONS) $^ -o $@
 
 # client.out: client.cpp

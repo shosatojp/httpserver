@@ -11,13 +11,7 @@ const std::unordered_map<std::string, std::string> mimetypes = {
     {".png", "image/png"},
     {".gif", "image/gif"},
     {".json", "application/json"},
+    {".ico", "image/x-icon"},
 };
 
-std::string get_mimetype(const std::string& ext) {
-    auto itr = mimetypes.find(ext);
-    if (itr != mimetypes.end()) {
-        return itr->second;
-    } else {
-        return "text/plain";
-    }
-}
+std::string get_mimetype(const std::string& ext);

@@ -104,15 +104,18 @@ bool starts_with(const std::string& s, const std::string& prefix) {
 
 const std::string HttpResponse::root = (std::string)std::filesystem::current_path() + std::string("/");
 
-bool HttpResponse::file(const std::string& path) {
-    if (path.length() > 0) {
-        std::string absolute_path = std::filesystem::absolute(path).lexically_normal();
-        if (starts_with(absolute_path, root) && std::filesystem::exists(absolute_path)) {
-            std::ifstream ifs{absolute_path};
-            auto c = std::copy(std::istream_iterator<char>(ifs),
-                               std::istream_iterator<char>(),
-                               std::back_inserter(body));
-            return true;
+bool HttpResponse::file(const std::string& raw_path) {
+    if (raw_path.size() > 0) {
+        std::string&& path = raw_path.substr(1);
+        if (path.length() > 0) {
+            std::string absolute_path = std::filesystem::absolute(path).lexically_normal();
+            if (starts_with(absolute_path, root) && std::filesystem::exists(absolute_path)) {
+                std::ifstream ifs{absolute_path};
+                auto c = std::copy(std::istream_iterator<char>(ifs),
+                                   std::istream_iterator<char>(),
+                                   std::back_inserter(body));
+                return true;
+            }
         }
     }
     return false;

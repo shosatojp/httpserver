@@ -9,7 +9,7 @@ Server::Server(const char* bind_ip, int port) : bind_ip(bind_ip), port(port) {
     signal(SIGPIPE, NULL);
 }
 
-[[noreturn]] void Server::listen(const std::function<void(HttpRequest&&, HttpResponse&&)>& handler) {
+[[noreturn]] void Server::listen(const HttpHandler& handler) {
     if ((sockfd = ::socket(PF_INET, SOCK_STREAM, 0)) < 0) {
         throw std::runtime_error("socket");
     }
@@ -42,7 +42,7 @@ Server::Server(const char* bind_ip, int port) : bind_ip(bind_ip), port(port) {
     }
 }
 
-void Server::handle(const int sockfd, const struct sockaddr_in&& client, const std::function<void(HttpRequest&&, HttpResponse&&)>& handler) {
+void Server::handle(const int sockfd, const struct sockaddr_in&& client, const HttpHandler& handler) {
     while (1) {  // loop for keep alive
         HttpRead status = HttpRead::Header;
         std::stringstream token;

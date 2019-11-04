@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -18,7 +19,7 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include <fstream>
+#include <utility>
 
 class HttpMessage {
    public:
@@ -99,6 +100,9 @@ enum class HttpRead {
     Header,
     Body
 };
+
+using HttpHandler = std::function<void(HttpRequest&&, HttpResponse&&)>;
+
 class Server {
    public:
     Server(const char*, int);
@@ -106,8 +110,8 @@ class Server {
     Server& operator=(Server&&) = default;
     ~Server();
 
-    void listen(const std::function<void(HttpRequest&&, HttpResponse&&)>&);
-    void handle(const int sockfd, const struct sockaddr_in&& client, const std::function<void(HttpRequest&&, HttpResponse&&)>& handler);
+    void listen(const HttpHandler&);
+    void handle(const int sockfd, const struct sockaddr_in&& client, const HttpHandler& handler);
 
    private:
     Server() = delete;
@@ -138,3 +142,14 @@ class Client {
     const char* ip_addr{};
     int port{};
 };
+
+class Router {
+   public:
+    Router(const std::vector<std::pair<const std::string, const HttpHandler>>& table);
+    bool operator()(HttpRequest&& req, HttpResponse&& res) const;
+
+   private:
+    std::vector<std::pair<const std::string, const HttpHandler>> table;
+};
+
+bool starts_with(const std::string& s, const std::string& prefix);
