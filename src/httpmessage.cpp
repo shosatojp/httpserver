@@ -55,7 +55,7 @@ std::string HttpRequest::to_string() {
     for (auto&& [key, value] : headers) {
         ss << key << " : " << value << std::endl;
     }
-    ss << "<body(size = " << body_size << ")>";
+    ss << "<body(size = " << body.size() << ")>";
     return ss.str();
 }
 
@@ -70,7 +70,7 @@ bool HttpRequest::keep_alive() {
  * HttpResponse
  */
 void HttpResponse::respond() {
-    add_header("Content-Length", this->body_size);
+    add_header("Content-Length", this->body.size());
     std::stringstream ss;
     ss << this->version << " " << this->status_code << " " << this->status_message << "\r\n";
     for (auto&& [key, value] : this->headers)
@@ -102,17 +102,18 @@ bool starts_with(const std::string& s, const std::string& prefix) {
     return s.size() >= prefix.size() && std::equal(prefix.begin(), prefix.end(), s.begin());
 }
 
-const std::string HttpResponse::root = std::filesystem::absolute(".");
+const std::string HttpResponse::root = (std::string)std::filesystem::current_path() + std::string("/");
 
 bool HttpResponse::file(const std::string& path) {
-    std::string absolute_path = std::filesystem::absolute(path).lexically_normal();
-    if (starts_with(absolute_path, root) && std::filesystem::exists(absolute_path)) {
-        std::ifstream ifs{absolute_path};
-        std::copy(std::istream_iterator<char>(ifs),
-                  std::istream_iterator<char>(),
-                  std::back_inserter(body));
-        return true;
-    } else {
-        return false;
+    if (path.length() > 0) {
+        std::string absolute_path = std::filesystem::absolute(path).lexically_normal();
+        if (starts_with(absolute_path, root) && std::filesystem::exists(absolute_path)) {
+            std::ifstream ifs{absolute_path};
+            auto c = std::copy(std::istream_iterator<char>(ifs),
+                               std::istream_iterator<char>(),
+                               std::back_inserter(body));
+            return true;
+        }
     }
+    return false;
 }

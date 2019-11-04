@@ -36,20 +36,16 @@ class HttpMessage {
     std::string version = "HTTP/1.1";
     std::vector<char> body;
     int header_count = -1;
-    size_t body_size = 0;
 };
 
 void HttpMessage::add_body(char* buf, size_t size) {
     body.insert(body.end(), buf, buf + size);
-    body_size += size;
 }
 void HttpMessage::add_body(char c) {
     body.push_back(c);
-    body_size++;
 }
 void HttpMessage::add_body(const std::string&& str) {
     body.insert(body.end(), str.begin(), str.end());
-    body_size += str.length();
 }
 
 class HttpRequest : public HttpMessage {
@@ -89,7 +85,7 @@ class HttpResponse : public HttpMessage {
         status(status_code);
         respond();
     }
-    void file(const std::string& path);
+    bool file(const std::string& path);
 
    private:
     static const std::string root;
