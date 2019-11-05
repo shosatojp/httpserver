@@ -1,5 +1,5 @@
 
-#include "header.hpp"
+#include "tinyhttp.hpp"
 
 HttpServer::HttpServer(const char* bind_ip, int port) : bind_ip(bind_ip), port(port) {
     reader_addr.sin_family = PF_INET;
