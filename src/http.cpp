@@ -1,5 +1,27 @@
 #include "header.hpp"
+#include "mimetypes.hpp"
 #include "util.hpp"
+
+const std::unordered_map<std::string, HttpMethod::_HttpMethod> HttpMethod::http_methods = {
+    {"GET", HttpMethod::GET},
+    {"POST", HttpMethod::POST},
+    {"PUT", HttpMethod::PUT},
+    {"DELETE", HttpMethod::DELETE},
+    {"PATCH", HttpMethod::PATCH},
+};
+
+HttpMethod::_HttpMethod HttpMethod::from_string(const std::string& s) noexcept {
+    auto it = http_methods.find(s);
+    return it != http_methods.end() ? it->second : _HttpMethod::GET;
+}
+
+std::string HttpMethod::to_string(const _HttpMethod m) noexcept {
+    auto it = std::find_if(http_methods.begin(), http_methods.end(), [m](const std::pair<std::string, _HttpMethod>& pair) {
+        return m == pair.second;
+    });
+    return it != http_methods.end() ? it->first : "<UNSUPPORTED METHOD>";
+}
+
 /**
  * HttpMessage
 */
@@ -24,8 +46,10 @@ long HttpRequest::add_header(const std::string&& line) {
     if (header_count == -1) {
         // versions
         std::istringstream iss{line};
-        iss >> method >> path >> version;
-        std::transform(method.cbegin(), method.cend(), method.begin(), toupper);
+        std::string _method;
+        iss >> _method >> path >> version;
+        std::transform(_method.cbegin(), _method.cend(), _method.begin(), toupper);
+        this->method = HttpMethod::from_string(_method);
         header_count = 0;
     } else {
         // real header
@@ -96,13 +120,12 @@ void HttpResponse::status(int status_code, const std::string& status_message) {
     this->status_message = status_message;
 }
 
-
-
 const std::string HttpResponse::root = (std::string)std::filesystem::current_path() + std::string("/");
 
 bool HttpResponse::file(const std::string& raw_path) {
     if (raw_path.size() > 0) {
         std::string&& path = raw_path.substr(1);
+        this->add_header("Content-Type", get_mimetype(std::filesystem::path(path).extension()));
         if (path.length() > 0) {
             std::string absolute_path = std::filesystem::absolute(path).lexically_normal();
             if (util::starts_with(absolute_path, root) && std::filesystem::exists(absolute_path)) {

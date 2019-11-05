@@ -8,19 +8,38 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <algorithm>
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
-#include <vector>
 #include <utility>
-#include <algorithm>
-#include <iterator>
+#include <cmath>
+#include <vector>
+
+class HttpMethod {
+   public:
+    enum _HttpMethod : char {
+        GET = 1,
+        POST = 2,
+        PUT = 4,
+        DELETE = 8,
+        PATCH = 16
+    };
+    static _HttpMethod from_string(const std::string& s) noexcept;
+    static std::string to_string(const _HttpMethod m) noexcept;
+
+   private:
+    HttpMethod() = delete;
+    static const std::unordered_map<std::string, _HttpMethod> http_methods;
+};
 
 class HttpMessage {
    public:
@@ -58,7 +77,7 @@ class HttpRequest : public HttpMessage {
     std::string to_string();
     using HttpMessage::add_header;
     long add_header(const std::string&& line);
-    inline std::string get_method();
+    inline HttpMethod::_HttpMethod get_method();
     inline std::string get_path();
     inline std::string get_addr();
     bool keep_alive();
@@ -66,10 +85,10 @@ class HttpRequest : public HttpMessage {
    private:
     sockaddr_in addr;
     std::string path;
-    std::string method;
+    HttpMethod::_HttpMethod method;
 };
-std::string HttpRequest::get_method() {
-    return method;
+HttpMethod::_HttpMethod HttpRequest::get_method() {
+    return this->method;
 }
 std::string HttpRequest::get_path() {
     return path;
@@ -146,9 +165,9 @@ class Client {
 
 class Router {
    public:
-    Router(const std::vector<std::pair<const std::string, const HttpHandler>>& table);
+    Router(const std::vector<std::tuple<const HttpMethod::_HttpMethod, const std::string, const HttpHandler>>& table);
     bool operator()(HttpRequest&& req, HttpResponse&& res) const;
 
    private:
-    std::vector<std::pair<const std::string, const HttpHandler>> table;
+    std::vector<std::tuple<const HttpMethod::_HttpMethod, const std::string, const HttpHandler>> table;
 };

@@ -11,6 +11,7 @@ $(TARGET): $(SERVER_PATH)
 	$(CXX) $(CXX_OPTIONS) $^ -o $@
 
 run: $(TARGET)
+	-pkill ./$<
 	./$<
 
 clean:

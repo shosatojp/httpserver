@@ -97,7 +97,8 @@ void HttpServer::handle(const int sockfd, const struct sockaddr_in&& client, con
 
         // log
         bool keep_alive = req.keep_alive();
-        std::cout << req.get_addr() << " " << req.get_method() << " " << req.get_path() << std::endl;
+        std::cout << req.get_addr() << " " << std::move(HttpMethod::to_string(req.get_method()))
+                  << " " << req.get_path() << std::endl;
         HttpResponse res{sockfd, keep_alive};
         handler(std::move(req), std::move(res));
 
