@@ -1,5 +1,19 @@
-# Minimal HTTP HttpServer for C++
+# Tiny HTTP HttpServer for C++
+## Minimal
+```cpp
+#include "header.hpp"
 
+int main() {
+    // Start http server
+    HttpServer{"127.0.0.1", 8080}
+        .listen([router = std::move(router)](HttpRequest&& req, HttpResponse&& res) {
+            // do something
+        });
+}
+```
+
+
+## Routing
 ```cpp
 #include "header.hpp"
 
