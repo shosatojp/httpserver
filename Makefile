@@ -1,6 +1,6 @@
 CXX=g++
 CXX_OPTIONS=-g -pthread -I ~/local/include -L ~/local/lib -std=c++1z
-SERVER_FILE=httpmessage.o mimetypes.o server.o route.o main.o
+SERVER_FILE=util.o httpmessage.o mimetypes.o server.o route.o main.o
 SERVER_PATH=$(addprefix src/,$(SERVER_FILE))
 TARGET=main.out
 

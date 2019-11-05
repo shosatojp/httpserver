@@ -20,6 +20,7 @@
 #include <vector>
 #include <utility>
 #include <algorithm>
+#include <iterator>
 
 class HttpMessage {
    public:
