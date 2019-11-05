@@ -5,7 +5,7 @@ int main() {
         {
             {HttpMethod::GET, "/api", [](HttpRequest&& req, HttpResponse&& res) {
                  res.add_header("Content-Type", "application/json; charset=UTF-8");
-                 res.add_body("{\"hoge\":\"hage\"}");
+                 res.add_body("{\"weather\":\"sunny\"}");
                  res(200);
              }},
             {HttpMethod::GET, "/", [](HttpRequest&& req, HttpResponse&& res) {
