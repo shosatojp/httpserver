@@ -13,10 +13,10 @@ int main() {
 # TODO
 * バイト列送れるように(たぶんok)
 * MimeTypeどうにかする(ok)
-* いいかんじのログ
+* いいかんじのログ(ok)
 * keep_alive(ok)
 * threading(ok)
 * （非同期）
 * ciやってみる
-* index.html
+* index.html(ok)
 * %encoding
