@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -21,8 +22,22 @@
 #include <string>
 #include <thread>
 #include <utility>
-#include <cmath>
 #include <vector>
+
+class Location {
+   public:
+    Location() = default;
+    Location(const std::string& src);
+    // void _parse_query(const std::string& search);
+    // void _parse_path(const std::string& src);
+    std::string& get_pathname();
+    std::unordered_map<std::string, std::string>& get_query();
+
+   private:
+    std::unordered_map<std::string, std::string> query;
+    std::string pathname;
+    std::string src;
+};
 
 class HttpMethod {
    public:
@@ -80,9 +95,11 @@ class HttpRequest : public HttpMessage {
     inline HttpMethod::_HttpMethod get_method();
     inline std::string get_path();
     inline std::string get_addr();
+    Location& get_location();
     bool keep_alive();
 
    private:
+    Location location;
     sockaddr_in addr;
     std::string path;
     HttpMethod::_HttpMethod method;

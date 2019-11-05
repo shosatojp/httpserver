@@ -2,6 +2,53 @@
 #include "mimetypes.hpp"
 #include "util.hpp"
 
+Location::Location(const std::string& src) {
+    this->src = src;
+    std::string search;
+    // pathname
+    auto pos = this->src.find('?');
+    if (pos != std::string::npos) {
+        this->pathname = this->src.substr(0, pos);
+        search = this->src.substr(pos + 1);
+    } else {
+        this->pathname = this->src;
+    }
+
+    // query
+    std::pair<std::string, std::string> pair;
+    size_t prev = 0;
+    for (size_t i = 0, count = search.length(); i < count; i++) {
+        switch (search[i]) {
+            case '=':
+                pair.first = std::move(search.substr(prev, i - prev));
+                prev = i + 1;
+                break;
+            case '&':
+                pair.second = std::move(search.substr(prev, i - prev));
+                // std::cout << pair.first << "|" << pair.second << std::endl;
+                if (pair.first.length() || pair.second.length())
+                    this->query.insert(this->query.end(), std::move(pair));
+                pair = std::pair<std::string, std::string>();
+                prev = i + 1;
+                break;
+        }
+    }
+    pair.second = std::move(search.substr(prev));
+    // std::cout << pair.first << "|" << pair.second << std::endl;
+    if (pair.first.length() || pair.second.length())
+        this->query.insert(this->query.end(), std::move(pair));
+}
+
+std::string& Location::get_pathname() {
+    return this->pathname;
+}
+std::unordered_map<std::string, std::string>& Location::get_query() {
+    return this->query;
+}
+
+/**
+ * HttpMethod
+ */
 const std::unordered_map<std::string, HttpMethod::_HttpMethod> HttpMethod::http_methods = {
     {"GET", HttpMethod::GET},
     {"POST", HttpMethod::POST},
@@ -50,6 +97,7 @@ long HttpRequest::add_header(const std::string&& line) {
         iss >> _method >> path >> version;
         std::transform(_method.cbegin(), _method.cend(), _method.begin(), toupper);
         this->method = HttpMethod::from_string(_method);
+        this->location = Location(this->path);
         header_count = 0;
     } else {
         // real header
@@ -86,6 +134,9 @@ bool HttpRequest::keep_alive() {
     std::string& value = headers[key];
     std::transform(value.cbegin(), value.cend(), value.begin(), toupper);
     return headers.count(key) && headers[key] == "KEEP-ALIVE";
+}
+Location& HttpRequest::get_location() {
+    return this->location;
 }
 
 /**
@@ -125,17 +176,19 @@ const std::string HttpResponse::root = (std::string)std::filesystem::current_pat
 bool HttpResponse::file(const std::string& raw_path) {
     if (raw_path.size() > 0) {
         std::string&& path = raw_path.substr(1);
-        this->add_header("Content-Type", get_mimetype(std::filesystem::path(path).extension()));
-        if (path.length() > 0) {
-            std::string absolute_path = std::filesystem::absolute(path).lexically_normal();
-            if (util::starts_with(absolute_path, root) && std::filesystem::exists(absolute_path)) {
-                std::ifstream ifs{absolute_path, std::ios::binary | std::ios::in};
-                ifs >> std::noskipws;
-                std::copy(std::istream_iterator<char>(ifs),
-                          std::istream_iterator<char>(),
-                          std::back_inserter(body));
-                return true;
-            }
+        if (path.length() == 0) path = ".";
+        std::filesystem::path absolute_path = std::filesystem::absolute(path).lexically_normal();
+        if (std::filesystem::is_directory(absolute_path)) {
+            absolute_path /= "index.html";
+        }
+        this->add_header("Content-Type", get_mimetype(std::filesystem::path(absolute_path).extension()));
+        if (util::starts_with(absolute_path, root) && std::filesystem::exists(absolute_path)) {
+            std::ifstream ifs{absolute_path, std::ios::binary | std::ios::in};
+            ifs >> std::noskipws;
+            std::copy(std::istream_iterator<char>(ifs),
+                      std::istream_iterator<char>(),
+                      std::back_inserter(body));
+            return true;
         }
     }
     return false;

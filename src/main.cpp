@@ -9,7 +9,7 @@ int main() {
                  res(200);
              }},
             {HttpMethod::GET, "/", [](HttpRequest&& req, HttpResponse&& res) {
-                 if (res.file(req.get_path())) {
+                 if (res.file(req.get_location().get_pathname())) {
                      res(200);
                  } else {
                      res(404);
