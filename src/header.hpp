@@ -104,20 +104,20 @@ enum class HttpRead {
 
 using HttpHandler = std::function<void(HttpRequest&&, HttpResponse&&)>;
 
-class Server {
+class HttpServer {
    public:
-    Server(const char*, int);
-    Server(Server&&) = default;
-    Server& operator=(Server&&) = default;
-    ~Server();
+    HttpServer(const char*, int);
+    HttpServer(HttpServer&&) = default;
+    HttpServer& operator=(HttpServer&&) = default;
+    ~HttpServer();
 
     void listen(const HttpHandler&);
     void handle(const int sockfd, const struct sockaddr_in&& client, const HttpHandler& handler);
 
    private:
-    Server() = delete;
-    Server& operator=(const Server&) = delete;
-    Server(const Server&) = delete;
+    HttpServer() = delete;
+    HttpServer& operator=(const HttpServer&) = delete;
+    HttpServer(const HttpServer&) = delete;
     int sockfd{};
     sockaddr_in reader_addr{};
     const char* bind_ip{};
@@ -152,5 +152,3 @@ class Router {
    private:
     std::vector<std::pair<const std::string, const HttpHandler>> table;
 };
-
-bool starts_with(const std::string& s, const std::string& prefix);

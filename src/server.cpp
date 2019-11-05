@@ -1,7 +1,7 @@
 
-#include "common.hpp"
+#include "header.hpp"
 
-Server::Server(const char* bind_ip, int port) : bind_ip(bind_ip), port(port) {
+HttpServer::HttpServer(const char* bind_ip, int port) : bind_ip(bind_ip), port(port) {
     reader_addr.sin_family = PF_INET;
     reader_addr.sin_addr.s_addr = ::htonl(INADDR_ANY);
     reader_addr.sin_port = ::htons(port);
@@ -9,7 +9,7 @@ Server::Server(const char* bind_ip, int port) : bind_ip(bind_ip), port(port) {
     signal(SIGPIPE, NULL);
 }
 
-[[noreturn]] void Server::listen(const HttpHandler& handler) {
+[[noreturn]] void HttpServer::listen(const HttpHandler& handler) {
     if ((sockfd = ::socket(PF_INET, SOCK_STREAM, 0)) < 0) {
         throw std::runtime_error("socket");
     }
@@ -42,7 +42,7 @@ Server::Server(const char* bind_ip, int port) : bind_ip(bind_ip), port(port) {
     }
 }
 
-void Server::handle(const int sockfd, const struct sockaddr_in&& client, const HttpHandler& handler) {
+void HttpServer::handle(const int sockfd, const struct sockaddr_in&& client, const HttpHandler& handler) {
     while (1) {  // loop for keep alive
         HttpRead status = HttpRead::Header;
         std::stringstream token;
@@ -105,7 +105,7 @@ void Server::handle(const int sockfd, const struct sockaddr_in&& client, const H
     }
 }
 
-Server::~Server() noexcept {
+HttpServer::~HttpServer() noexcept {
     if (this->sockfd)
         ::close(this->sockfd);
 }

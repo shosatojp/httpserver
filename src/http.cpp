@@ -1,4 +1,4 @@
-#include "common.hpp"
+#include "header.hpp"
 #include "util.hpp"
 /**
  * HttpMessage
@@ -96,9 +96,7 @@ void HttpResponse::status(int status_code, const std::string& status_message) {
     this->status_message = status_message;
 }
 
-bool starts_with(const std::string& s, const std::string& prefix) {
-    return s.size() >= prefix.size() && std::equal(prefix.begin(), prefix.end(), s.begin());
-}
+
 
 const std::string HttpResponse::root = (std::string)std::filesystem::current_path() + std::string("/");
 
@@ -107,7 +105,7 @@ bool HttpResponse::file(const std::string& raw_path) {
         std::string&& path = raw_path.substr(1);
         if (path.length() > 0) {
             std::string absolute_path = std::filesystem::absolute(path).lexically_normal();
-            if (starts_with(absolute_path, root) && std::filesystem::exists(absolute_path)) {
+            if (util::starts_with(absolute_path, root) && std::filesystem::exists(absolute_path)) {
                 std::ifstream ifs{absolute_path, std::ios::binary | std::ios::in};
                 ifs >> std::noskipws;
                 std::copy(std::istream_iterator<char>(ifs),

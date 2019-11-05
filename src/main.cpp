@@ -1,4 +1,4 @@
-#include "common.hpp"
+#include "header.hpp"
 #include "mimetypes.hpp"
 
 int main() {
@@ -18,7 +18,7 @@ int main() {
                  }
              }},
         }};
-    Server{"127.0.0.1", 8081}
+    HttpServer{"127.0.0.1", 8081}
         .listen([router = std::move(router)](HttpRequest&& req, HttpResponse&& res) {
             router(std::move(req), std::move(res));
         });
