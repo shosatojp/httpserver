@@ -8,7 +8,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <boost/algorithm/string.hpp>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -20,6 +19,7 @@
 #include <thread>
 #include <vector>
 #include <utility>
+#include <algorithm>
 
 class HttpMessage {
    public:

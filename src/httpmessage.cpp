@@ -1,5 +1,5 @@
 #include "common.hpp"
-
+#include "util.hpp"
 /**
  * HttpMessage
 */
@@ -30,11 +30,9 @@ long HttpRequest::add_header(const std::string&& line) {
     } else {
         // real header
         size_t sep = line.find(':');
-        std::string key = line.substr(0, sep),
-                    value = line.substr(sep + 1);
+        std::string key = util::trim(line.substr(0, sep)),
+                    value = util::trim(line.substr(sep + 1));
         // normarize
-        boost::trim(key);
-        boost::trim(value);
         std::transform(key.cbegin(), key.cend(), key.begin(), toupper);
 
         if (key == "CONTENT-LENGTH") {
