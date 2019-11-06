@@ -1,5 +1,5 @@
-#include "tinyhttp.hpp"
 #include "mimetypes.hpp"
+#include "tinyhttp.hpp"
 #include "util.hpp"
 
 Location::Location(const std::string& src) {
@@ -8,10 +8,10 @@ Location::Location(const std::string& src) {
     // pathname
     auto pos = this->src.find('?');
     if (pos != std::string::npos) {
-        this->pathname = this->src.substr(0, pos);
+        this->pathname = util::url_decode(this->src.substr(0, pos));
         search = this->src.substr(pos + 1);
     } else {
-        this->pathname = this->src;
+        this->pathname = util::url_decode(this->src);
     }
 
     // query
@@ -20,12 +20,11 @@ Location::Location(const std::string& src) {
     for (size_t i = 0, count = search.length(); i < count; i++) {
         switch (search[i]) {
             case '=':
-                pair.first = std::move(search.substr(prev, i - prev));
+                pair.first = std::move(util::url_decode(search.substr(prev, i - prev)));
                 prev = i + 1;
                 break;
             case '&':
-                pair.second = std::move(search.substr(prev, i - prev));
-                // std::cout << pair.first << "|" << pair.second << std::endl;
+                pair.second = std::move(util::url_decode(search.substr(prev, i - prev)));
                 if (pair.first.length() || pair.second.length())
                     this->query.insert(this->query.end(), std::move(pair));
                 pair = std::pair<std::string, std::string>();
@@ -33,8 +32,7 @@ Location::Location(const std::string& src) {
                 break;
         }
     }
-    pair.second = std::move(search.substr(prev));
-    // std::cout << pair.first << "|" << pair.second << std::endl;
+    pair.second = std::move(util::url_decode(search.substr(prev)));
     if (pair.first.length() || pair.second.length())
         this->query.insert(this->query.end(), std::move(pair));
 }

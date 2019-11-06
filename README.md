@@ -63,4 +63,5 @@ int main() {
 * （非同期）
 * ciやってみる
 * index.html(ok)
-* %encoding
+* %encoding(ok)
+* File root
