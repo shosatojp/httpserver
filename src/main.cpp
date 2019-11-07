@@ -1,6 +1,7 @@
 #include "tinyhttp.hpp"
 
 int main() {
+    std::cout << __GNUC__ << std::endl;
     Router router{
         {
             {HttpMethod::GET, "/api", [](HttpRequest&& req, HttpResponse&& res) {

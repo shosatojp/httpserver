@@ -11,7 +11,6 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -23,13 +22,19 @@
 #include <thread>
 #include <utility>
 #include <vector>
+#if __GNUC__ >= 9
+#include <filesystem>
+#else
+#include <experimental/filesystem>
+namespace std {
+namespace filesystem = std::experimental::filesystem;
+}
+#endif
 
 class Location {
    public:
     Location() = default;
     Location(const std::string& src);
-    // void _parse_query(const std::string& search);
-    // void _parse_path(const std::string& src);
     std::string& get_pathname();
     std::unordered_map<std::string, std::string>& get_query();
 
