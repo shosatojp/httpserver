@@ -175,7 +175,7 @@ bool HttpResponse::file(const std::string& raw_path) {
     if (raw_path.size() > 0) {
         std::string&& path = raw_path.substr(1);
         if (path.length() == 0) path = ".";
-        std::filesystem::path absolute_path = path;//std::filesystem::absolute(path).lexically_normal();
+        std::filesystem::path absolute_path = std::filesystem::absolute(path).lexically_normal();
         if (std::filesystem::is_directory(absolute_path)) {
             absolute_path /= "index.html";
         }
