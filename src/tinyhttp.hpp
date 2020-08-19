@@ -97,8 +97,8 @@ class HttpRequest : public HttpMessage {
     std::string to_string();
     using HttpMessage::add_header;
     long add_header(const std::string&& line);
-    inline HttpMethod::_HttpMethod get_method();
-    inline std::string get_path();
+    inline HttpMethod::_HttpMethod get_method() const;
+    inline std::string get_path() const;
     inline std::string get_addr();
     Location& get_location();
     bool keep_alive();
@@ -109,10 +109,10 @@ class HttpRequest : public HttpMessage {
     std::string path;
     HttpMethod::_HttpMethod method;
 };
-HttpMethod::_HttpMethod HttpRequest::get_method() {
+inline HttpMethod::_HttpMethod HttpRequest::get_method() const {
     return this->method;
 }
-std::string HttpRequest::get_path() {
+inline std::string HttpRequest::get_path() const {
     return path;
 }
 std::string HttpRequest::get_addr() {
@@ -188,7 +188,7 @@ class Client {
 class Router {
    public:
     Router(const std::vector<std::tuple<const HttpMethod::_HttpMethod, const std::string, const HttpHandler>>& table);
-    bool operator()(HttpRequest&& req, HttpResponse&& res) const;
+    bool operator()(const HttpRequest& req, const HttpResponse& res) const;
 
    private:
     std::vector<std::tuple<const HttpMethod::_HttpMethod, const std::string, const HttpHandler>> table;
